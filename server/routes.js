@@ -105,7 +105,20 @@ const song = async function(req, res) {
 // Route 4: GET /album/:album_id
 const album = async function(req, res) {
   // TODO (TASK 5): implement a route that given a album_id, returns all information about the album
-  res.json({}); // replace this with your implementation
+  const a_id = req.params.album_id;
+
+  connection.query(`
+    SELECT * 
+    FROM Albums
+    WHERE album_id = '${a_id}' 
+    `, (err, data) => { 
+      if (err) { 
+        console.log(err);
+        res.json({});
+      } else { 
+        res.json(data.rows[0]);
+      }
+    }); // replace this with your implementation
 }
 
 // Route 5: GET /albums
