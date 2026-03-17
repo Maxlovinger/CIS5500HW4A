@@ -1,5 +1,6 @@
 const { Pool, types } = require('pg');
-const config = require('./config.json')
+const config = require('./config.json');
+const { connect } = require('./server');
 
 // Override the default parsing for BIGINT (PostgreSQL type ID 20)
 types.setTypeParser(20, val => parseInt(val, 10)); //DO NOT DELETE THIS
@@ -172,16 +173,46 @@ const album_songs = async function(req, res) {
 const top_songs = async function(req, res) {
   const page = req.query.page;
   // TODO (TASK 8): use the ternary (or nullish) operator to set the pageSize based on the query or default to 10
-  const pageSize = undefined;
+  const pageSize = req.query.pageSize ?? 10;
 
   if (!page) {
     // TODO (TASK 9)): query the database and return all songs ordered by number of plays (descending)
     // Hint: you will need to use a JOIN to get the album title as well
-    res.json([]); // replace this with your implementation
+    connection.query(
+      `
+      SELECT s.song_id, s.title, s.album_id, a.title AS album, s.plays
+      FROM Songs AS s 
+      JOIN Albums AS a ON s.album_id = a.album_id
+      ORDER BY s.plays DESC
+      `, (err, data) => { 
+        if (err) { 
+          console.log(err);
+          res.json({});
+        } else { 
+          res.json(data.rows);
+        }
+      });
+    
   } else {
     // TODO (TASK 10): reimplement TASK 9 with pagination
     // Hint: use LIMIT and OFFSET (see https://www.w3schools.com/php/php_mysql_select_limit.asp)
-    res.json([]); // replace this with your implementation
+    connection.query( 
+      `
+      SELECT s.song_id, s.title, s.album_id, a.title AS album, s.plays
+      FROM Songs AS s 
+      FROM Songs AS s 
+      JOIN Albums AS a on s.album_id = a.album_id
+      ORDER BY s.plays DESC
+      LIMIT ${pageSize}
+      OFFSET ${(page - 1) * pageSize}
+      `, [pageSize, (pageSize - 1) * pageSize], (err, data) => { 
+        if (err) { 
+          console.log(err);
+          res.json({});
+        } else { 
+          res.json(data.rows);
+        }
+      });
   }
 }
 
