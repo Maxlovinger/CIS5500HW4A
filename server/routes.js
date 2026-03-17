@@ -125,13 +125,43 @@ const album = async function(req, res) {
 const albums = async function(req, res) {
   // TODO (TASK 6): implement a route that returns all albums ordered by release date (descending)
   // Note that in this case you will need to return multiple albums, so you will need to return an array of objects
-  res.json([]); // replace this with your implementation
-}
+
+  const alb = req.query.album_id;
+
+   connection.query(`
+    SELECT * 
+    FROM Albums
+    ORDER BY release_date DESC
+    `, (err, data) => {
+      if (err) { 
+        console.log(err);
+        res.json({});
+      } else { 
+        res.json(data.rows);
+      }
+    });
+  }
 
 // Route 6: GET /album_songs/:album_id
 const album_songs = async function(req, res) {
   // TODO (TASK 7): implement a route that given an album_id, returns all songs on that album ordered by track number (ascending)
-  res.json([]); // replace this with your implementation
+  
+  const album = async.query.album_id
+
+  connection.query(`
+    SELECT s.song_id, s.title, s.number, s.duration, s.plays
+    FROM Albums AS a
+    JOIN Songs AS s ON a.album_id = s.album_id
+    WHERE a.album_id = '${album}'
+    ORDER BY s.track_number ASC
+    `, (err, data) => { 
+      if (err) { 
+        console.log(err);
+        res.json({});
+      } else { 
+        res.join(data.rows);
+    }
+  });
 }
 
 /************************
