@@ -127,7 +127,7 @@ const albums = async function(req, res) {
   // TODO (TASK 6): implement a route that returns all albums ordered by release date (descending)
   // Note that in this case you will need to return multiple albums, so you will need to return an array of objects
 
-  const alb = req.query.album_id;
+  const alb = req.params.album_id;
 
    connection.query(`
     SELECT * 
@@ -147,20 +147,20 @@ const albums = async function(req, res) {
 const album_songs = async function(req, res) {
   // TODO (TASK 7): implement a route that given an album_id, returns all songs on that album ordered by track number (ascending)
   
-  const album = async.query.album_id
+  const album = req.params.album_id;
 
   connection.query(`
     SELECT s.song_id, s.title, s.number, s.duration, s.plays
     FROM Albums AS a
     JOIN Songs AS s ON a.album_id = s.album_id
     WHERE a.album_id = '${album}'
-    ORDER BY s.track_number ASC
+    ORDER BY s.number ASC
     `, (err, data) => { 
       if (err) { 
         console.log(err);
         res.json([]);
       } else { 
-        res.join(data.rows);
+        res.json(data.rows);
     }
   });
 }
@@ -273,6 +273,7 @@ const search_songs = async function(req, res) {
   const energy_high = req.query.energy_high ?? 1; 
   const valence_low = req.query.valence_low ?? 0; 
   const valence_high = req.query.valence_high ?? 1;
+  const explicit = req.query.explicit;
 
   connection.query( 
     `
@@ -312,8 +313,24 @@ const entrance_songs = async function(req, res) {
   const limit = req.query.limit || 10;
   const maxEnergy = req.query.max_energy || 0.5;
   const minDanceability = req.query.min_danceability || 0.73;
-
-  res.json([]);
+  
+  connection.query ( 
+    `
+      SELECT s.song_id, s.title, a.title AS album, s.danceability, s.energy, s.valence
+      FROM Songs AS s
+      JOIN Albums AS a ON s.album_id = a.album_id
+      WHERE energy <= ${maxEnergy} 
+      AND danceability >= ${minDanceability}
+      ORDER BY valence DESC, danceability DESC
+      LIMIT ${limit}
+    `, (err, data) => { 
+      if (err) { 
+        console.log(err);
+        res.json([]);
+      } else {
+        res.json(data.rows);
+      }
+    }); 
 }
 
 module.exports = {
