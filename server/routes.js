@@ -64,7 +64,7 @@ const random = async function(req, res) {
       console.log(err);
       // Be cognizant of the fact we return an empty object {}. For future routes, depending on the
       // return type you may need to return an empty array [] instead.
-      res.json({});
+      res.json([]);
     } else {
       // Here, we return results of the query as an object, keeping only relevant data
       // being song_id and title which you will add. In this case, there is only one song
@@ -96,7 +96,7 @@ const song = async function(req, res) {
     `, (err, data) => {
     if (err) {
       console.log(err);
-      res.json({});
+      res.json([]);
     } else {
       res.json(data.rows[0]);
     }
@@ -115,7 +115,7 @@ const album = async function(req, res) {
     `, (err, data) => { 
       if (err) { 
         console.log(err);
-        res.json({});
+        res.json([]);
       } else { 
         res.json(data.rows[0]);
       }
@@ -136,7 +136,7 @@ const albums = async function(req, res) {
     `, (err, data) => {
       if (err) { 
         console.log(err);
-        res.json({});
+        res.json([]);
       } else { 
         res.json(data.rows);
       }
@@ -158,7 +158,7 @@ const album_songs = async function(req, res) {
     `, (err, data) => { 
       if (err) { 
         console.log(err);
-        res.json({});
+        res.json([]);
       } else { 
         res.join(data.rows);
     }
@@ -173,7 +173,7 @@ const album_songs = async function(req, res) {
 const top_songs = async function(req, res) {
   const page = req.query.page;
   // TODO (TASK 8): use the ternary (or nullish) operator to set the pageSize based on the query or default to 10
-  const pageSize = req.query.pageSize ?? 10;
+  const pageSize = req.query.page_size ?? 10;
 
   if (!page) {
     // TODO (TASK 9)): query the database and return all songs ordered by number of plays (descending)
@@ -187,7 +187,7 @@ const top_songs = async function(req, res) {
       `, (err, data) => { 
         if (err) { 
           console.log(err);
-          res.json({});
+          res.json([]);
         } else { 
           res.json(data.rows);
         }
@@ -200,15 +200,14 @@ const top_songs = async function(req, res) {
       `
       SELECT s.song_id, s.title, s.album_id, a.title AS album, s.plays
       FROM Songs AS s 
-      FROM Songs AS s 
       JOIN Albums AS a on s.album_id = a.album_id
       ORDER BY s.plays DESC
       LIMIT ${pageSize}
       OFFSET ${(page - 1) * pageSize}
-      `, [pageSize, (pageSize - 1) * pageSize], (err, data) => { 
+      `, (err, data) => { 
         if (err) { 
           console.log(err);
-          res.json({});
+          res.json([]);
         } else { 
           res.json(data.rows);
         }
@@ -218,9 +217,45 @@ const top_songs = async function(req, res) {
 
 // Route 8: GET /top_albums
 const top_albums = async function(req, res) {
+  const page = req.query.page;
+  const pageSize = req.query.page_size ?? 10;
   // TODO (TASK 11): return the top albums ordered by aggregate number of plays of all songs on the album (descending), with optional pagination (as in route 7)
   // Hint: you will need to use a JOIN and aggregation to get the total plays of songs in an album
-  res.json([]); // replace this with your implementation
+  if (!page) { 
+    connection.query( 
+      `
+      SELECT album_id, a.title, SUM(s.plays) AS plays
+      FROM Albums AS a 
+      JOIN Songs AS s ON s.album_id = a.album_id 
+      GROUP BY a.album_id, a.title
+      ORDER BY SUM(s.plays) DESC
+      `, (err, data) => { 
+        if (err) { 
+          console.log(err);
+          res.json([]);
+        } else {
+          res.json(data.rows);
+        }
+      });
+  } else { 
+    connection.query(
+      `
+      SELECT a.album_id, a.title,SUM(s.plays) AS plays
+      FROM Albums AS a 
+      JOIN Songs AS s ON s.album_id = a.album_id 
+      GROUP BY a.album_id, a.title
+      ORDER BY SUM(s.plays) DESC
+      LIMIT ${pageSize}
+      OFFSET ${(page - 1) * pageSize}
+      `, (err, data) => { 
+        if (err) { 
+          console.log(err);
+          res.json([]);
+        } else { 
+          res.json(data.rows)
+      }
+    });
+  }
 }
 
 // Route 9: GET /search_songs
@@ -230,8 +265,35 @@ const search_songs = async function(req, res) {
   const title = req.query.title ?? '';
   const durationLow = req.query.duration_low ?? 60;
   const durationHigh = req.query.duration_high ?? 660;
+  const plays_low = req.query.plays_low ?? 0; 
+  const plays_high = req.query.plays_high ?? 1100000000; 
+  const danceability_low = req.query.danceability_low ?? 0; 
+  const danceability_high = req.query.danceability_high ?? 1; 
+  const energy_low = req.query.energy_low ?? 0; 
+  const energy_high = req.query.energy_high ?? 1; 
+  const valence_low = req.query.valence_low ?? 0; 
+  const valence_high = req.query.valence_high ?? 1;
 
-  res.json([]); // replace this with your implementation
+  connection.query( 
+    `
+    SELECT * 
+    FROM Songs 
+    WHERE title LIKE '%${title}%' 
+    AND duration BETWEEN ${durationLow} AND ${durationHigh}
+    AND plays BETWEEN ${plays_low} AND ${plays_high}
+    AND danceability BETWEEN ${danceability_low} AND ${danceability_high}
+    AND energy BETWEEN ${energy_low} AND ${energy_high} 
+    AND valence BETWEEN ${valence_low} AND ${valence_high} 
+    AND explicit = ${explicit === 'true' ? 1 : 0}    
+    ORDER BY title ASC
+    `, (err, data) => { 
+      if (err) { 
+        console.log(err);
+        res.json([]);
+      } else { 
+        res.json(data.rows);
+      }
+    });
 }
 
 /**
