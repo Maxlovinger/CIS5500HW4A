@@ -224,7 +224,7 @@ const top_albums = async function(req, res) {
   if (!page) { 
     connection.query( 
       `
-      SELECT album_id, a.title, SUM(s.plays) AS plays
+      SELECT a.album_id, a.title, SUM(s.plays) AS plays
       FROM Albums AS a 
       JOIN Songs AS s ON s.album_id = a.album_id 
       GROUP BY a.album_id, a.title
@@ -285,7 +285,7 @@ const search_songs = async function(req, res) {
     AND danceability BETWEEN ${danceability_low} AND ${danceability_high}
     AND energy BETWEEN ${energy_low} AND ${energy_high} 
     AND valence BETWEEN ${valence_low} AND ${valence_high} 
-    AND explicit = ${explicit === 'true' ? 1 : 0}    
+    ${explicit === 'true' ? '' : 'AND explicit = 0'}
     ORDER BY title ASC
     `, (err, data) => { 
       if (err) { 
