@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Box, Button, ButtonGroup, Modal } from '@mui/material';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import { NavLink } from 'react-router-dom';
-
 import { formatDuration } from '../helpers/formatter';
 const config = require('../config.json');
 
@@ -29,7 +28,16 @@ export default function SongCard({ songId, handleClose }) {
     //       .then(res => res.json())
     //       .then(resJson => set state variable with album data)
     //     })
-  }, []);
+    fetch(`http://${config.server_host}:${config.server_port}/song/${songId}`)
+      .then(res => res.json()) 
+      .then(resJson => {
+        setSongData(resJson)
+        fetch(`http://${config.server_host}:${config.server_port}/album/${resJson.album_id}`)
+          .then(res => res.json()) 
+          .then(resJson => setAlbumData(resJson));
+      })
+
+  }, [songId]);
 
   const chartData = [
     { name: 'Danceability', value: songData.danceability },
@@ -82,7 +90,23 @@ export default function SongCard({ songId, handleClose }) {
                   {/* TODO (TASK 22): display the same data as the bar chart using a radar chart */}
                   {/* Hint: refer to documentation at https://recharts.org/en-US/api/RadarChart */}
                   {/* Hint: note you can omit the <Legend /> element and only need one Radar element, as compared to the sample in the docs */}
-                  <div>Replace Me</div>
+                  <RadarChart
+                    outerRadius='80%'
+                    data = {chartData}
+                    style={{ width: '100%', height: '100%', maxWidth: '500px', maxHeight: '80vh', aspectRatio: 1 }}
+                    responsive
+                    margin={{
+                      top: 20,
+                      left: 20,
+                      right: 20,
+                      bottom: 20,
+                    }}
+                  >
+                    <PolarGrid />
+                    <PolarAngleAxis dataKey = "name"/>
+                    <PolarRadiusAxis/>
+                    <Radar dataKey = "value" stroke='#8884d8' fill='#8884d8'/>
+                  </RadarChart>
                 </ResponsiveContainer>
               )
           }
