@@ -28,9 +28,9 @@ export default function HomePage() {
       .then(resJson => setSongOfTheDay(resJson));
 
     // TODO (TASK 15): add a fetch call to get the app author (name not pennkey) and store the name field in the state variable
-    fetch(`http://${config.server_host}:${config.server_port}/author`)
+    fetch(`http://${config.server_host}:${config.server_port}/author/name`)
       .then(res => res.json())
-      .then(resJson => setAppAuthor(resJson.name));
+      .then(resJson => setAppAuthor(resJson.data));
   }, []);
 
   // Here, we define the columns of the "Top Songs" table. The songColumns variable is an array (in order)
@@ -85,6 +85,7 @@ export default function HomePage() {
       <LazyTable route={`http://${config.server_host}:${config.server_port}/top_albums`} columns={albumColumns} defaultPageSize={5} rowsPerPageOptions={[5, 10]} />
       {/* TODO (TASK 18): add a paragraph (<p></p>) that displays “Created by [name]” using the name state stored from TASK 13/TASK 14 */}
       <p>Created by {appAuthor}</p>
+      <Divider />
     </Container>
   );
 };

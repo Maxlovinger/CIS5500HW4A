@@ -24,13 +24,13 @@ export default function AlbumsPage() {
   return (
     // TODO (TASK 23): Try out the different provided formatting options by replacing “format1”  in the Container's style property with the other provided options.
     // TODO (TASK 23): Choose the one that displays all the albums in a fluid grid.
-    <Container style={format1}>
+    <Container style={format3}>
       {albums.map((album) =>
         <Box
           key={album.album_id}
           p={3}
           m={2}
-          style={{ background: '#c5cae9', borderRadius: '16px', border: '2px solid #000' }}
+          style={{ background: '#c5cae9', borderRadius: '16px', border: '2px solid #000'}}
         >
           <img
             key={album.album_id}
